@@ -11,22 +11,22 @@ services:
     ports:
       - "5432:5432"
 
-  # web:
-  #   build:
-  #     context: ..
-  #     dockerfile: deploy/Dockerfile
-  #   ports:
-  #     - "8000:8000"
-  #   environment:
-  #     - DB_NAME=guestready
-  #     - DB_USER=postgres
-  #     - DB_PASSWORD=postgres
-  #     - DB_HOST=db
-  #     - DB_PORT=5432
-  #   depends_on:
-  #     - db
-  #   volumes:
-  #     - ../:/app
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_NAME=guestready
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=db
+      - DB_PORT=5432
+    depends_on:
+      - db
+    volumes:
+      - ../:/app
 
 volumes:
   postgres_data:
