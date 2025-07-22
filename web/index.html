@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
+            <a href="/"
+                class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+                <span class="fs-4">Transaction Tracker</span>
+            </a>
+            <ul class="nav nav-pills flex-column flex-sm-row">
+                <li class="nav-item">
+                    <button id="loadFromApiBtn" class="nav-link active btn btn-link">Load transactions from API</button>
+                </li>
+                <li class="nav-item">
+                    <button id="addTransactionBtn" class="nav-link btn btn-link">Add Transaction</button>
+                </li>
+            </ul>
+        </header>
+
+        <section class="row">
+            <div
+                class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3">
+                <h1 id="balanceDisplay" class="mb-2 mb-sm-0">Balance: <span class="spinner-border spinner-border-sm"
+                        role="status"></span></h1>
+                <div id="loadingIndicator" class="d-none">
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    <span>Loading...</span>
+                </div>
+            </div>
+            <!-- Balance History Chart -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Balance History</h5>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="app.toggleChart()"
+                                id="chartToggleBtn">
+                                Hide Chart
+                            </button>
+                        </div>
+                        <div class="card-body" id="chartContainer">
+                            <canvas id="balanceChart" width="400" height="400"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 id="transactionCount" class="text-muted">Total transactions: <span
+                        class="spinner-border spinner-border-sm" role="status"></span></h5>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="row mb-3">
+                <div class="col-12 col-sm-6 col-md-4 mb-2 mb-sm-0">
+                    <label for="filterType" class="form-label">Filter by Type</label>
+                    <select class="form-select" id="filterType">
+                        <option value="">All Types</option>
+                        <option value="deposit">Deposit</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-4 mb-2 mb-sm-0">
+                    <label for="filterDateFrom" class="form-label">From Date</label>
+                    <input type="date" class="form-control" id="filterDateFrom">
+                </div>
+                <div class="col-12 col-sm-6 col-md-4 mb-2 mb-sm-0">
+                    <label for="filterDateTo" class="form-label">To Date</label>
+                    <input type="date" class="form-control" id="filterDateTo">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-12">
+                    <button class="btn btn-primary me-2 mb-1" onclick="app.applyFilters()">Apply Filters</button>
+                    <button class="btn btn-outline-secondary mb-1" onclick="app.clearFilters()">Clear Filters</button>
+                </div>
+            </div>
+
+
+
+            <div id="alertContainer"></div>
+
+            <div class="table-responsive">
+                <table class="table table-success table-striped mt-4">
+                    <thead>
+                        <tr>
+                            <th class="text-nowrap">ID</th>
+                            <th class="text-nowrap">Amount</th>
+                            <th class="text-nowrap">Type</th>
+                            <th class="text-nowrap">Date</th>
+                            <th class="text-nowrap">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsTableBody">
+                        <tr>
+                            <td colspan="5" class="text-center">
+                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                                Loading transactions...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Transaction Modal -->
+    <div class="modal fade" id="transactionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="transactionModalTitle">Add Transaction</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalAlertContainer"></div>
+                    <form id="transactionForm">
+                        <div class="mb-3">
+                            <label for="transactionAmount" class="form-label">Amount</label>
+                            <input type="number" class="form-control" id="transactionAmount" step="0.01" min="0"
+                                required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="transactionType" class="form-label">Type</label>
+                            <select class="form-select" id="transactionType" required>
+                                <option value="">Select type</option>
+                                <option value="deposit">Deposit</option>
+                                <option value="expense">Expense</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" id="transactionModalFooter">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+
+</html>
